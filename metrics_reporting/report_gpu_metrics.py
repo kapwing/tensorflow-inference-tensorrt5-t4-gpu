@@ -22,15 +22,17 @@ from google.cloud import monitoring_v3
 
 
 metadata_server = "http://metadata/computeMetadata/v1/instance/"
-metadata_flavor = {'Metadata-Flavor' : 'Google'}
-data = requests.get(metadata_server + 'zone', headers = metadata_flavor).text
+metadata_flavor = {'Metadata-Flavor': 'Google'}
+data = requests.get(metadata_server + 'zone', headers=metadata_flavor).text
 zone = data.split("/")[3]
+print(zone)
 project_id = data.split("/")[1]
+print(project_id)
 
 
 client = monitoring_v3.MetricServiceClient()
 project_name = client.project_path(project_id)
-instance_id = requests.get(metadata_server + 'id', headers = metadata_flavor).text
+instance_id = requests.get(metadata_server + 'id', headers=metadata_flavor).text
 
 
 def report_metric(value, type, instance_id, zone, project_id):
@@ -75,19 +77,28 @@ def get_gpu_memory_utilization():
     return get_nvidia_smi_utilization("utilization.memory")
 
 
+def get_gpu_memory_used():
+    return get_nvidia_smi_utilization("memory.used")
+
+
 GPU_UTILIZATION_METRIC_NAME = "gpu_utilization"
 GPU_MEMORY_UTILIZATION_METRIC_NAME = "gpu_memory_utilization"
+GPU_MEMORY_USED_METRIC_NAME = "gpu_memory_used"
 
 while True:
-  report_metric(get_gpu_utilization(),
-                GPU_UTILIZATION_METRIC_NAME,
-                instance_id,
-                zone,
-                project_id)
-  report_metric(get_gpu_memory_utilization(),
-                GPU_MEMORY_UTILIZATION_METRIC_NAME,
-                instance_id,
-                zone,
-                project_id)
-  time.sleep(5)
-
+    report_metric(get_gpu_utilization(),
+        GPU_UTILIZATION_METRIC_NAME,
+        instance_id,
+        zone,
+        project_id)
+    report_metric(get_gpu_memory_utilization(),
+        GPU_MEMORY_UTILIZATION_METRIC_NAME,
+        instance_id,
+        zone,
+        project_id)
+    report_metric(get_gpu_memory_used(),
+        GPU_MEMORY_USED_METRIC_NAME,
+        instance_id,
+        zone,
+        project_id)
+    time.sleep(5)
